@@ -1,10 +1,11 @@
-# On defini les includes non propre au projet pour eviter les erreurs de compilation
-# Wall signifier montrer les warnings
+# We define the includes which are not specific to the project to avoid compilation errors
+# Wall means show warnings
 g++ -Wall -s -I include -I "./include" -c classes/*.h
 g++ -Wall -s -I include -I "./include" -c classes/*.cpp
 g++ -Wall -s -I include -I "./include" -c *.cpp
 
-# On definie le resultat du build + les fichiers obj a lier + les librairies dans dans /lib
+# We define the result of the build + obj files to link + the libraries included in / lib
 g++ -L "./lib" -o "./bin/puzzle" *.o -s -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio
-# Lance l'application
+
+# starts the application
 ./bin/puzzle
