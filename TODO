@@ -1,0 +1,4 @@
+-1. Afficher les bords avec un joli aspect gris metallique pour illustrer que le puzzle bouge mais qu'on voit
+pas l'image originale
+0. Creer un cercle dont l'exterieur est sombre pour le mode FLASHLIGHT
+1. Nettoyer le code
