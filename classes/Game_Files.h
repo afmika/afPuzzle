@@ -1,5 +1,7 @@
 #ifndef GAME_FILES_H_INCLUDED
 #define GAME_FILES_H_INCLUDED
+
+
 // icon
 #define IMG_ICON "puzzle_afmika_data/icon.af"
 

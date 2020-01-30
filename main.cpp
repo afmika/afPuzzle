@@ -14,8 +14,9 @@
 #include <cmath>
 #include <vector>
 
+
+#include "classes/Game_Files.h"
 #include "classes/PicManager.h"
-#include "classes/Game_files.h"
 #include "classes/afTools.h"
 
 using namespace std;
@@ -65,7 +66,7 @@ double perf_animation_count = 0;
 bool count_done = true;
 
 
-sf::Sound *hide_sound;
+sf::Sound *hide_sound = NULL;
 
 sf::Texture main_level_pic;
 sf::Texture flashlight_texture;
