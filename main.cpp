@@ -52,7 +52,7 @@ bool first = true;
 bool take_screenshot = false;
 
 double time_elapsed = .0f;
-double img_showing_duration_hidden = 50.f; // image is replaced after 50 frames 
+double img_showing_duration_hidden = 50.f; // pic replaced after 50 frames 
 double img_showing_counter = .0f;
 
 float pixelate_intensity_init = .1f;
@@ -159,16 +159,17 @@ void initPiece() {
     }
 }
 
-void initSprite(bool change_pic, bool from_space_or_tab) {
+void initSprite(bool change_pic, bool space_tab_pressed) {
     int temp_pos = pos_current_pic;
 
     if(change_pic) {
-        if(pick_next_randomly && from_space_or_tab) {
+        if(pick_next_randomly && space_tab_pressed) {
             pos_current_pic = randomGeneratorInf(files.size());
-        } else if(!pick_next_randomly && from_space_or_tab) {
+        } else if(!pick_next_randomly && space_tab_pressed) {
             pos_current_pic++;
         }
-        if(from_space_or_tab && pos_current_pic == temp_pos) {
+        // occurs when the randomized number is the same as the current index
+        if(space_tab_pressed && pos_current_pic == temp_pos) {
             pos_current_pic++;
         } 
         // checks
@@ -330,10 +331,10 @@ void initRandomPos() {
     while(gameClear()) initRandomPos();
 }
 
-void newGame(bool dont_change_pic, bool call_from_space_or_tab) {
+void newGame(bool dont_change_pic, bool space_or_tab_pressed) {
     time_elapsed = .0;
     srand(time(NULL));
-    initSprite(dont_change_pic, call_from_space_or_tab);
+    initSprite(dont_change_pic, space_or_tab_pressed);
     initRandomPos();
     move_index_number = 0;
     total_moves = 0;
@@ -394,7 +395,7 @@ string getAppropriedText(string button, string text) {
     return tmp;
 }
 
-void initAppropriateControlText(sf::Text& control_text) {
+void initAppropriateControlText(sf::Text &control_text) {
     string all;
     all.append(getAppropriedText("UP / DOWN", "Change level"));
     all.append(getAppropriedText("Left / Right", "Navigate"));
@@ -436,7 +437,7 @@ void drawTextMenu(sf::Sound score_sound, sf::Sprite back_sprite, sf::RenderWindo
     sf::Text files_text;
     sf::Text game_dim_text;
 
-    // back
+    // background
     back_sprite.setPosition(anchor);
     window.draw(back_sprite);
     sf::Vector2f size = (sf::Vector2f) back_sprite.getTexture()->getSize();
@@ -461,7 +462,6 @@ void drawTextMenu(sf::Sound score_sound, sf::Sprite back_sprite, sf::RenderWindo
     window.draw(game_dim_text);
     
     // perfs + moves
-    // it's ok because they are both integers
     string modes_str = getModesUsedText();
     if(modes_str.compare("") != 0) {
         string moves = doubleToStr((double) total_moves);
@@ -487,7 +487,7 @@ void drawTextMenu(sf::Sound score_sound, sf::Sprite back_sprite, sf::RenderWindo
         window.draw(perf_text);
     }
 
-    // files loaded
+    // loaded files
     string file_status(doubleToStr( files.size() ));
     file_status.append(" pics.");
     files_text.setFont(font);
@@ -509,7 +509,7 @@ void drawTextMenu(sf::Sound score_sound, sf::Sprite back_sprite, sf::RenderWindo
 
 
 void load_flashlight_shader(sf::RenderStates &states) {
-    // shaders's order matters
+    // note : shaders's order matters
     flashlight_shader_loaded = flashlight_shader.loadFromFile("shaders/orbe.vert.af", "shaders/lumin.frag.af");
 
     if(!flashlight_shader_loaded)
@@ -530,7 +530,6 @@ void refreshFlashLightShader(float _radius, float t, float x, float y) {
         flashlight_shader.setUniform("storm_inner_radius", radius / 3);
         flashlight_shader.setUniform("storm_total_radius", radius);
 
-        // cos va faire osciller la luminosite
         flashlight_shader.setUniform("blink_alpha", (float)( 0.5f + cos(t * 6) * 0.25f));
         flashlight_shader.setUniform("texture", sf::Shader::CurrentTexture);
     }
@@ -540,15 +539,15 @@ void refreshPixelateShader(float intensity) {
     if(pixelate_shader_loaded) {
         intensity = intensity < 0 ? 0 : intensity; 
         pix_shader.setUniform("texture", sf::Shader::CurrentTexture);
-        pix_shader.setUniform("pixel_threshold", intensity ); // pixelate level
+        pix_shader.setUniform("pixel_threshold", intensity );
     }
 }
 
-void stopAndInitGame(sf::Sound &next_sound, bool call_from_space_or_tab) {
+void stopAndInitGame(sf::Sound &next_sound, bool space_or_tab_pressed) {
     first = true;
     pixelate_intensity = pixelate_intensity_init;
 
-    newGame(true, call_from_space_or_tab);
+    newGame(true, space_or_tab_pressed);
     next_sound.play();
 
     total_moves = 0;
