@@ -32,9 +32,8 @@ int dim_x = width/division;
 int dim_y = height/division;
 int move_index_number = 0;
 int level_index_number = 1;
-int pos_current_pic = -1;
+int pos_current_pic = 0;
 int ms_time = 1000 / frames;
-int current_img_index = 10;
 int performance = 0;
 int total_moves = 0;
 
@@ -96,8 +95,9 @@ typedef struct piece {
 
 Piece **puzzle = NULL;
 
-void printLoadingError(string filename) {
+int printLoadingError(string filename) {
     cout << "Error loading " << filename << endl;
+    return EXIT_FAILURE;
 }
 
 void initTable() {
@@ -141,15 +141,6 @@ int randomGeneratorInf(int limit) {
     return rand() % limit;
 }
 
-int getNextIndex(int limit) {
-    if(current_img_index >= limit-1) {
-        current_img_index = 0;
-    } else {
-        current_img_index++;
-    }
-    return current_img_index;
-}
-
 void initPiece() {
     initTable();
     int xrand = randomGeneratorInf(division);
@@ -168,31 +159,25 @@ void initPiece() {
     }
 }
 
-void initSprite(bool randomize, bool from_space_or_tab) {
-    int v = -1;
-    if(pick_next_randomly) {
-        v = randomGeneratorInf(files.size());
-    } else if(from_space_or_tab) {
-        v = getNextIndex(files.size());
-    }
+void initSprite(bool change_pic, bool from_space_or_tab) {
+    int temp_pos = pos_current_pic;
 
-    if(randomize && from_space_or_tab) {
-        if(pos_current_pic == v) {
-            v = (v+1) % files.size();
-        } else {
-            pos_current_pic = v;
+    if(change_pic) {
+        if(pick_next_randomly && from_space_or_tab) {
+            pos_current_pic = randomGeneratorInf(files.size());
+        } else if(!pick_next_randomly && from_space_or_tab) {
+            pos_current_pic++;
         }
-    } else {
-        v = (pos_current_pic > 0) ? pos_current_pic : 0;
+        if(from_space_or_tab && pos_current_pic == temp_pos) {
+            pos_current_pic++;
+        } 
+        // checks
+        pos_current_pic = pos_current_pic < 0 ? files.size()-1 : pos_current_pic;
+        pos_current_pic = pos_current_pic >= (int) files.size() ? 0 : pos_current_pic;
     }
 
-    if( ! from_space_or_tab ) {
-        // left right button
-        v = v < 0 ? files.size() - 1 : v;
-        v = v % files.size();
-    }
-
-    string pic_file_name = files[v];
+    string pic_file_name = files[pos_current_pic];
+    cout << " Index " << pos_current_pic << endl;
     // cout << pic_file_name << endl;
 
     if(!main_level_pic.loadFromFile(pic_file_name)) {
@@ -345,10 +330,10 @@ void initRandomPos() {
     while(gameClear()) initRandomPos();
 }
 
-void newGame(bool randomize, bool call_from_space_or_tab) {
+void newGame(bool dont_change_pic, bool call_from_space_or_tab) {
     time_elapsed = .0;
     srand(time(NULL));
-    initSprite(randomize, call_from_space_or_tab);
+    initSprite(dont_change_pic, call_from_space_or_tab);
     initRandomPos();
     move_index_number = 0;
     total_moves = 0;
@@ -615,7 +600,7 @@ int main() {
         printLoadingError(FLASHLIGHT_BACK);
     }
 
-    newGame(true, true);
+    newGame(false, false);
 
     sf::Text time_text;
     time_text.setFillColor(sf::Color::Cyan);
