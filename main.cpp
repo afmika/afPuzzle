@@ -721,9 +721,8 @@ int main() {
                 if(e.key.code == sf::Keyboard::M) {
                     hide_menu = ! hide_menu;
                 }             
-                if(e.key.code == sf::Keyboard::R) {
+                if(e.key.code == sf::Keyboard::R && first && count_done) {
                     pick_next_randomly = ! pick_next_randomly;
-                    newGame(false, true);
                 }
 
                 if(e.key.code == sf::Keyboard::S) {
