@@ -30,7 +30,6 @@ int division = 3;
 
 int dim_x = width/division;
 int dim_y = height/division;
-int move_index_number = 0;
 int level_index_number = 1;
 int pos_current_pic = 0;
 int ms_time = 1000 / frames;
@@ -252,7 +251,7 @@ void exchangePiece(int x, int y, int x_, int y_) {
 
 void movePiece(int xx, int yy) {
     if(puzzle[yy][xx].active) {
-        /** CELLULE DEPLACABLE**/
+        // single cell
         for(int i = yy - 1; i <= yy + 1; i++) {
             for(int j = xx - 1; j <= xx + 1; j++) {
                 bool correct_pos = (i >=0 && j >= 0 && i < division && j < division);
@@ -263,34 +262,35 @@ void movePiece(int xx, int yy) {
                 if(correct_pos && ! corner ) {
                     if(!puzzle[i][j].active) {
                         exchangePiece(xx, yy, j, i);
-                        move_index_number++;
+                        total_moves++;
                         return;
                     }
                 }
             }
         }
-        /** CELLULE NON DEPLACABLE MAIS APARTIENANT A UN BLOC DEPLACABLE**/
-        //cout << "Non deplacable" << endl;
-         for(int i = -division; i <= division; i++) {
-                if(yy+i >= 0 && yy+i < division && ! puzzle[yy+i][xx].active) {
-                    //1 : vers le bas et -1 : vers le haut
-                    int tmp_y = yy + i, dy = (yy + i < yy) ? 1 : -1;
-                    while(tmp_y != yy) {
-                        exchangePiece(xx, tmp_y, xx, tmp_y + dy);
-                        tmp_y = tmp_y + dy;
-                    }
-                    break;
+        // multiple cells
+        for(int i = -division; i <= division; i++) {
+            if(yy+i >= 0 && yy+i < division && ! puzzle[yy+i][xx].active) {
+                //1 : down , -1 : up
+                int tmp_y = yy + i, dy = (yy + i < yy) ? 1 : -1;
+                while(tmp_y != yy) {
+                    exchangePiece(xx, tmp_y, xx, tmp_y + dy);
+                    tmp_y = tmp_y + dy;
                 }
-                if(xx+i >= 0 && xx+i < division && ! puzzle[yy][xx+i].active) {
-                    //1 : vers la droite et -1 : vers la gauche
-                    int tmp_x = xx + i, dx = (xx + i < xx) ? 1 : -1;
-                    while(tmp_x != xx) {
-                        exchangePiece(tmp_x, yy, tmp_x + dx, yy);
-                        tmp_x = tmp_x + dx;
-                    }
-                    break;
-                }
+                total_moves++;
+                break;
             }
+            if(xx+i >= 0 && xx+i < division && ! puzzle[yy][xx+i].active) {
+                //1 : vers la droite et -1 : vers la gauche
+                int tmp_x = xx + i, dx = (xx + i < xx) ? 1 : -1;
+                while(tmp_x != xx) {
+                    exchangePiece(tmp_x, yy, tmp_x + dx, yy);
+                    tmp_x = tmp_x + dx;
+                }
+                total_moves++;
+                break;
+            }
+        }
     }
 }
 
@@ -336,7 +336,6 @@ void newGame(bool dont_change_pic, bool space_or_tab_pressed) {
     srand(time(NULL));
     initSprite(dont_change_pic, space_or_tab_pressed);
     initRandomPos();
-    move_index_number = 0;
     total_moves = 0;
     performance = 0;
 
@@ -668,7 +667,7 @@ int main() {
                     int y = e.mouseButton.y / dim_y;
                     movePiece(x, y);
 
-                    total_moves++;
+                    cout << total_moves << endl;
                     performance = refreshPerformance(total_moves);
 
                     hit_sound.play();
