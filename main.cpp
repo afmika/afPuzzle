@@ -285,7 +285,7 @@ void movePiece(int xx, int yy) {
                 break;
             }
             if(xx+i >= 0 && xx+i < division && ! puzzle[yy][xx+i].active) {
-                //1 : vers la droite et -1 : vers la gauche
+                //1 : right et -1 : left
                 int tmp_x = xx + i, dx = (xx + i < xx) ? 1 : -1;
                 while(tmp_x != xx) {
                     exchangePiece(tmp_x, yy, tmp_x + dx, yy);
@@ -417,9 +417,7 @@ void initAppropriateControlText(sf::Text &control_text) {
     // first call
     if(modes_used->size() == 0) {
         const double mult = getMultiplicator();
-        if(mult > 10e-6) {
-            all.append("\nSCORE x "+doubleToStr( mult ));    
-        }
+		all.append("\nSCORE x "+doubleToStr( mult ));    
     }
 
     control_text.setString(all);
