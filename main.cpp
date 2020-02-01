@@ -59,10 +59,14 @@ float pixelate_intensity = pixelate_intensity_init;
 const float pixelate_velocity = pixelate_intensity_init / 5.0f; // back to normal after 5 frames
 
 // performance anim
-const double perf_animation_frames = 30; // 30 frames
-double perf_animation_count = 0;
+const int perf_animation_frames = 30; // 30 frames
+int perf_animation_count = 0;
 bool count_done = true;
 
+// flashlight anim
+const int flashlight_animation_frames = 30; // 30 frames
+int flashlight_animation_count = 0;
+bool flashlight_anim_done = true;
 
 sf::Sound *hide_sound = NULL;
 
@@ -476,7 +480,6 @@ void drawTextMenu(sf::Sound score_sound, sf::Sprite back_sprite, sf::RenderWindo
         perf_text.setPosition(anchor + sf::Vector2f(20, 200));
 
         if(perf_animation_count <= performance) {
-            count_done = false;
             perf_animation_count += ((double) performance / perf_animation_frames);
             // score_sound.play();
         } else {
@@ -509,28 +512,26 @@ void drawTextMenu(sf::Sound score_sound, sf::Sprite back_sprite, sf::RenderWindo
 
 void load_flashlight_shader(sf::RenderStates &states) {
     // note : shaders's order matters
-    flashlight_shader_loaded = flashlight_shader.loadFromFile("shaders/orbe.vert.af", "shaders/lumin.frag.af");
+    flashlight_shader_loaded = flashlight_shader.loadFromFile("shaders/flashlight.frag.af", sf::Shader::Fragment);
 
     if(!flashlight_shader_loaded)
         printLoadingError("FLASHLIGHTS SHADERS");
 
     states.shader = &flashlight_shader;
-    for (int i = 0; i < 10000; ++i) {
-        float x = static_cast<float>(std::rand() % width);
-        float y = static_cast<float>(std::rand() % height);
-        points.append(sf::Vertex(sf::Vector2f(x, y), sf::Color::Cyan));
-    }
 }
 
-void refreshFlashLightShader(float _radius, float t, float x, float y) {
+void refreshFlashLightShader(float x, float y) {
     if(flashlight_shader_loaded) {
-        float radius = 200 + cos(t) * 150;
-        flashlight_shader.setUniform("storm_position", sf::Vector2f(x, y));
-        flashlight_shader.setUniform("storm_inner_radius", radius / 3);
-        flashlight_shader.setUniform("storm_total_radius", radius);
+        y = height - y;
+        float radius = flashlight_animation_count * (width / flashlight_animation_frames);
+        sf::Vector3f vec_color(0, 0, 18);
+        float alpha = 1;
 
-        flashlight_shader.setUniform("blink_alpha", (float)( 0.5f + cos(t * 6) * 0.25f));
         flashlight_shader.setUniform("texture", sf::Shader::CurrentTexture);
+        flashlight_shader.setUniform("pos_mouse", sf::Vector2f(x, y));
+        flashlight_shader.setUniform("radius", radius);
+        flashlight_shader.setUniform("back_color",  vec_color);
+        flashlight_shader.setUniform("alpha",  alpha);        
     }
 }
 
@@ -738,14 +739,23 @@ int main() {
             } else {
                 pixelate_intensity = 0;
             }
-            refreshPixelateShader( pixelate_intensity );
-            
-            window.draw(main_pic, pixelate_state);
-            // window.draw(main_pic, flashlight_state);
-            drawGrid(window);
-            if(! hide_menu )
-                drawTextMenu(score_sound, back_sprite, window);
 
+            if(mode_flashlight && !flashlight_anim_done) {
+                refreshFlashLightShader(x , y );
+                window.draw(main_pic, flashlight_state);
+                flashlight_animation_count++;
+                if(flashlight_animation_count > flashlight_animation_frames) {
+                    flashlight_animation_count = 0;
+                    flashlight_anim_done = true;
+                }
+            } else {
+                refreshPixelateShader( pixelate_intensity );
+                window.draw(main_pic, pixelate_state);
+                
+                drawGrid(window);
+                if(! hide_menu )
+                    drawTextMenu(score_sound, back_sprite, window);
+            }
         } else {
             readPuzzleTab(window);
             drawGrid(window);
@@ -758,11 +768,13 @@ int main() {
                 sf::Vector2u size = flashlight_texture.getSize();
                 flashlight_back.setPosition(x - size.x/2, y - size.y/2);
                 window.draw(flashlight_back);
-                // refreshFlashLightShader(100.f, time_elapsed, x , y );
                 // window.draw(points, flashlight_state);
             }
 
             if(gameClear()) {
+                if(mode_flashlight)
+                    flashlight_anim_done = false;
+                count_done = false;
                 first = true;
                 // pixelate_intensity = pixelate_intensity_init;
                 congrats_sound.play();
