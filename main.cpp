@@ -285,7 +285,7 @@ void movePiece(int xx, int yy) {
                 break;
             }
             if(xx+i >= 0 && xx+i < division && ! puzzle[yy][xx+i].active) {
-                //1 : right et -1 : left
+                //1 : right , -1 : left
                 int tmp_x = xx + i, dx = (xx + i < xx) ? 1 : -1;
                 while(tmp_x != xx) {
                     exchangePiece(tmp_x, yy, tmp_x + dx, yy);
