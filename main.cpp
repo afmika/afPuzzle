@@ -47,11 +47,14 @@ bool flashlight_shader_loaded = false;
 bool hide_menu = false;
 bool hide_sound_is_played = false;
 
+vector<int> *uncovered_piece = nullptr;
+int hidden_tick_time = ms_time; // updates each 20 frames
+
 bool first = true;
 bool take_screenshot = false;
 
 double time_elapsed = .0f;
-double img_showing_duration_hidden = 50.f; // pic replaced after 50 frames 
+double img_showing_duration_hidden = 20.f; // pic replaced after 30 frames 
 double img_showing_counter = .0f;
 
 float pixelate_intensity_init = .1f;
@@ -96,7 +99,7 @@ typedef struct piece {
     bool active;
 } Piece;
 
-Piece **puzzle = NULL;
+vector<vector<Piece>> puzzle;
 
 int printLoadingError(string filename) {
     cout << "Error loading " << filename << endl;
@@ -106,9 +109,9 @@ int printLoadingError(string filename) {
 void initTable() {
     dim_x = width / division;
     dim_y = height / division;
-    puzzle = (Piece **) malloc(sizeof(Piece *) * division);
+    puzzle = vector<vector<Piece>>(division);
     for(int i=0; i < division; i++) {
-        puzzle[i] = (Piece *) malloc(sizeof(Piece) * division);
+        puzzle[i] = vector<Piece>(division);
     }
 }
 
@@ -140,8 +143,22 @@ int refreshPerformance(int moves) {
     return (int) perf;
 }
 
-int randomGeneratorInf(int limit) {
+int randomGeneratorInf(int limit = 1000) {
     return rand() % limit;
+}
+
+void pickLuckyPiece() {
+    if ( uncovered_piece != nullptr )
+        delete uncovered_piece;
+    uncovered_piece = new vector<int>(2);
+    (*uncovered_piece)[0] = randomGeneratorInf(division);
+    (*uncovered_piece)[1] = randomGeneratorInf(division);
+}
+
+bool isLuckyPiece(int y, int x) {
+    if ( uncovered_piece != nullptr )
+        return uncovered_piece->at(0) == y && uncovered_piece->at(1) == x;
+    return false;
 }
 
 void initPiece() {
@@ -203,7 +220,7 @@ sf::Sprite ajustSprite(sf::Sprite pic, int i, int j, int x, int y) {
 void readPuzzleTab(sf::RenderWindow &window) {
     sf::Text tmp;
     sf::CircleShape circle;
-    bool not_hidden_yet = ! mode_hidden || img_showing_counter < (division * img_showing_duration_hidden);
+    bool not_hidden_yet = ! mode_hidden || (img_showing_counter < img_showing_duration_hidden);
     if(show_numbers && not_hidden_yet ) {
         tmp.setFont(font);
         tmp.setCharacterSize(15);
@@ -216,25 +233,29 @@ void readPuzzleTab(sf::RenderWindow &window) {
         circle.setOutlineColor(sf::Color::Black);
     }
 
-	if(mode_hidden) {
+	if (mode_hidden) {
 		img_showing_counter++;
 	}
 
     for(int i=0; i < division; i++) {
         for(int j=0; j < division; j++) {
-            if(puzzle[i][j].active) {
+            if ( puzzle[i][j].active ) {
                 int x = puzzle[i][j].x;
                 int y = puzzle[i][j].y;
-                if(mode_hidden == false || img_showing_counter < (division * img_showing_duration_hidden) ) {
+                if (mode_hidden == false || img_showing_counter < (division * img_showing_duration_hidden) ) {
                     window.draw(ajustSprite( main_pic, x, y, j, i ));
                 } else {
 					if(! hide_sound_is_played ) {
 						hide_sound->play();	
 						hide_sound_is_played = true;
 					}
-					window.draw(ajustSprite( hidden_back, x, y, j, i ));						
+                    if ( isLuckyPiece(y, x) ) {
+                        window.draw(ajustSprite( main_pic, x, y, j, i ));
+                    } else {
+                        window.draw(ajustSprite( hidden_back, x, y, j, i ));
+                    }
                 }
-                if(show_numbers) {
+                if ( show_numbers ) {
                     tmp.setString(doubleToStr( puzzle[i][j].index_number ));
                     tmp.setPosition(j * dim_x + (dim_x - 52), i * dim_y + 20);
                     circle.setPosition(j * dim_x + (dim_x - 60), i * dim_y + 16);
@@ -759,6 +780,11 @@ int main() {
             drawGrid(window);
 
             time_elapsed = clock.getElapsedTime().asSeconds();
+
+            // for HD mode
+            if ( clock.getElapsedTime().asMilliseconds() % hidden_tick_time == 0 ) {
+                pickLuckyPiece();
+            }
             
             if(mode_flashlight) {
                 x = x < 0 ? 0 : x; x = x > width ? height : x;
@@ -796,10 +822,10 @@ int main() {
             }
         }
 
-        if(turn_on_chrono)
+        if (turn_on_chrono)
             drawChrono(time_text, window);
 
-        if(take_screenshot) {
+        if (take_screenshot) {
             take_screenshot = false;
             sf::Vector2u windowSize = window.getSize();
             sf::Texture texture;
