@@ -13,7 +13,6 @@ void main() {
     float dist2 = (pix_coord.x - pos_mouse.x) * (pix_coord.x - pos_mouse.x) + (pix_coord.y - pos_mouse.y)*(pix_coord.y - pos_mouse.y);
     float dist = sqrt(dist2);
     if(dist >= radius) {
-        // on ecrase les parties non utiles
         float f = dist;
         pixel_color = (20 / f) * coul_computed ;
     }

@@ -48,7 +48,7 @@ bool hide_menu = false;
 bool hide_sound_is_played = false;
 
 vector<vector<int>> *uncovered_piece = nullptr;
-int hidden_tick_time = 2 * ms_time; // updates each 60 frames
+int hidden_tick_time = 2 * ms_time;
 int hidden_tick_count = 0;
 
 
@@ -134,12 +134,8 @@ int refreshPerformance(int moves) {
 
     double mult_perf = getMultiplicator();
 
-    // cout << "Original " << perf << endl;
     perf *= mult_perf;
     
-    // cout << mult_perf << endl;
-    // cout << "Multiplicated " << perf << endl;
-    // cout << perf << endl;
     perf += 1000 * ( division / time_elapsed);
 
     return (int) perf;
@@ -185,7 +181,7 @@ sf::RectangleShape getBlackSquare(int i, int j, int dim_x, int dim_y) {
     const int black_color = 255. * ( num / den );
     sf::RectangleShape rect;
     rect.setPosition(j * dim_x, i * dim_y);
-    rect.setFillColor(sf::Color(11, 11, 12, 255 - black_color));
+    rect.setFillColor(sf::Color(0, 0, 20, 255 - black_color));
     rect.setSize(sf::Vector2f(dim_x, dim_y));
     return rect;
 }
@@ -227,7 +223,7 @@ void initSprite(bool change_pic, bool space_tab_pressed) {
     }
 
     string pic_file_name = files[pos_current_pic];
-    cout << " Index " << pos_current_pic << endl;
+    // cout << " Index " << pos_current_pic << endl;
     // cout << pic_file_name << endl;
 
     if (!main_level_pic.loadFromFile(pic_file_name)) {
@@ -281,9 +277,9 @@ void readPuzzleTab(sf::RenderWindow &window) {
                     if ( isLuckyPiece(x, y) ) {
                         window.draw(ajustSprite( main_pic, x, y, j, i ));
                         window.draw(getBlackSquare(i, j, dim_x, dim_y));
-                    } else {
-                        window.draw(ajustSprite( hidden_back, x, y, j, i ));
+						continue;
                     }
+					window.draw(ajustSprite( hidden_back, x, y, j, i ));
                 }
                 if ( show_numbers ) {
                     tmp.setString(doubleToStr( puzzle[i][j].index_number ));
@@ -298,7 +294,7 @@ void readPuzzleTab(sf::RenderWindow &window) {
     }
 }
 
-void exchangePiece(int x, int y, int x_, int y_) {
+void swapPiece(int x, int y, int x_, int y_) {
     Piece tmp = puzzle[y][x];
     puzzle[y][x] = puzzle[y_][x_];
     puzzle[y_][x_] = tmp;
@@ -316,7 +312,7 @@ void movePiece(int xx, int yy) {
                             || ((i == yy + 1) && (j == xx - 1));
                 if (correct_pos && ! corner ) {
                     if (!puzzle[i][j].active) {
-                        exchangePiece(xx, yy, j, i);
+                        swapPiece(xx, yy, j, i);
                         total_moves++;
                         return;
                     }
@@ -328,8 +324,8 @@ void movePiece(int xx, int yy) {
             if (yy+i >= 0 && yy+i < division && ! puzzle[yy+i][xx].active) {
                 //1 : down , -1 : up
                 int tmp_y = yy + i, dy = (yy + i < yy) ? 1 : -1;
-                while(tmp_y != yy) {
-                    exchangePiece(xx, tmp_y, xx, tmp_y + dy);
+                while (tmp_y != yy) {
+                    swapPiece(xx, tmp_y, xx, tmp_y + dy);
                     tmp_y = tmp_y + dy;
                 }
                 total_moves++;
@@ -338,8 +334,8 @@ void movePiece(int xx, int yy) {
             if (xx+i >= 0 && xx+i < division && ! puzzle[yy][xx+i].active) {
                 //1 : right , -1 : left
                 int tmp_x = xx + i, dx = (xx + i < xx) ? 1 : -1;
-                while(tmp_x != xx) {
-                    exchangePiece(tmp_x, yy, tmp_x + dx, yy);
+                while (tmp_x != xx) {
+                    swapPiece(tmp_x, yy, tmp_x + dx, yy);
                     tmp_x = tmp_x + dx;
                 }
                 total_moves++;
@@ -383,7 +379,7 @@ void initRandomPos() {
         int yr = randomGeneratorInf(division);
         movePiece(xr, yr);
     }
-    while(gameClear()) initRandomPos();
+    while (gameClear()) initRandomPos();
 }
 
 void newGame(bool dont_change_pic, bool space_or_tab_pressed) {
@@ -607,7 +603,7 @@ int main() {
     files = loadPictures();
     sf::Clock clock; // timer
 
-    sf::RenderWindow window(sf::VideoMode(width, height), "afPuzzle 2 :: afmika", sf::Style::Titlebar | sf::Style::Close);
+    sf::RenderWindow window(sf::VideoMode(width, height), "afPuzzle 3 :: afmika", sf::Style::Titlebar | sf::Style::Close);
     sf::Texture back_texture, hidden_texture, chrono_texture;
     sf::Sprite back_sprite;
     
@@ -699,11 +695,11 @@ int main() {
     sf::RenderStates flashlight_state;
     load_flashlight_shader(flashlight_state);
     
-    while(window.isOpen()) {
+    while (window.isOpen()) {
         sf::Event e;
         float x = static_cast<float>(sf::Mouse::getPosition(window).x);
         float y = static_cast<float>(sf::Mouse::getPosition(window).y);
-        while(window.pollEvent(e)) {
+        while (window.pollEvent(e)) {
             if (e.type == sf::Event::Closed) {
                 window.close();
                 return 0;
