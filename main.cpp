@@ -24,12 +24,12 @@ using namespace std;
 const int width = 600;
 const int height = 600;
 const float volume = 6.0;
-const int frames = 20;
+const int frames = 30;
 
 int division = 3;
 
-int dim_x = width/division;
-int dim_y = height/division;
+int dim_x = width / division;
+int dim_y = height / division;
 int level_index_number = 1;
 int pos_current_pic = 0;
 int ms_time = 1000 / frames;
@@ -47,8 +47,10 @@ bool flashlight_shader_loaded = false;
 bool hide_menu = false;
 bool hide_sound_is_played = false;
 
-vector<int> *uncovered_piece = nullptr;
-int hidden_tick_time = ms_time; // updates each 20 frames
+vector<vector<int>> *uncovered_piece = nullptr;
+int hidden_tick_time = 2 * ms_time; // updates each 60 frames
+int hidden_tick_count = 0;
+
 
 bool first = true;
 bool take_screenshot = false;
@@ -110,7 +112,7 @@ void initTable() {
     dim_x = width / division;
     dim_y = height / division;
     puzzle = vector<vector<Piece>>(division);
-    for(int i=0; i < division; i++) {
+    for (int i = 0; i < division; i++) {
         puzzle[i] = vector<Piece>(division);
     }
 }
@@ -147,30 +149,57 @@ int randomGeneratorInf(int limit = 1000) {
     return rand() % limit;
 }
 
-void pickLuckyPiece() {
-    if ( uncovered_piece != nullptr )
-        delete uncovered_piece;
-    uncovered_piece = new vector<int>(2);
-    (*uncovered_piece)[0] = randomGeneratorInf(division);
-    (*uncovered_piece)[1] = randomGeneratorInf(division);
+vector<int> getSingleLuckyPiece() {
+    int i = randomGeneratorInf(division);
+    int j = randomGeneratorInf(division);
+
+    if ( !puzzle[i][j].active )
+        return getSingleLuckyPiece();;
+    
+    vector<int> result(2);
+    result[0] = i;
+    result[1] = j;
+    return result;
 }
 
-bool isLuckyPiece(int y, int x) {
+void pickLuckyPiece(int count = ((division - 1) * division)) {
     if ( uncovered_piece != nullptr )
-        return uncovered_piece->at(0) == y && uncovered_piece->at(1) == x;
+        delete uncovered_piece;
+    uncovered_piece = new vector<vector<int>>(count);
+    for (int i = 0; i < count; i++)
+        (*uncovered_piece) [i] = getSingleLuckyPiece();
+}
+
+bool isLuckyPiece(int x, int y) {
+    if ( uncovered_piece != nullptr ) {
+        for (auto piece : *uncovered_piece)
+            if (piece.at(0) == x && piece.at(1) == y)
+                return true;
+    }
     return false;
+}
+
+sf::RectangleShape getBlackSquare(int i, int j, int dim_x, int dim_y) {
+    double num = static_cast<double>(hidden_tick_count);
+    double den = static_cast<double>(hidden_tick_time);
+    const int black_color = 255. * ( num / den );
+    sf::RectangleShape rect;
+    rect.setPosition(j * dim_x, i * dim_y);
+    rect.setFillColor(sf::Color(11, 11, 12, 255 - black_color));
+    rect.setSize(sf::Vector2f(dim_x, dim_y));
+    return rect;
 }
 
 void initPiece() {
     initTable();
     int xrand = randomGeneratorInf(division);
     int yrand = randomGeneratorInf(division);
-    for(int i=0; i < division; i++) {
-        for(int j=0; j < division; j++) {
+    for (int i = 0; i < division; i++) {
+        for (int j = 0; j < division; j++) {
             puzzle[i][j].x = j;
             puzzle[i][j].y = i;
             puzzle[i][j].index_number = division * i + j + 1;
-            if(mode_random_hole) {
+            if (mode_random_hole) {
                 puzzle[i][j].active = ! (j == xrand && i == yrand);
             } else {
                 puzzle[i][j].active = ! (( i + j ) == 2 * (division - 1));
@@ -182,14 +211,14 @@ void initPiece() {
 void initSprite(bool change_pic, bool space_tab_pressed) {
     int temp_pos = pos_current_pic;
 
-    if(change_pic) {
-        if(pick_next_randomly && space_tab_pressed) {
+    if (change_pic) {
+        if (pick_next_randomly && space_tab_pressed) {
             pos_current_pic = randomGeneratorInf(files.size());
-        } else if(!pick_next_randomly && space_tab_pressed) {
+        } else if (!pick_next_randomly && space_tab_pressed) {
             pos_current_pic++;
         }
         // occurs when the randomized number is the same as the current index
-        if(space_tab_pressed && pos_current_pic == temp_pos) {
+        if (space_tab_pressed && pos_current_pic == temp_pos) {
             pos_current_pic++;
         } 
         // checks
@@ -201,7 +230,7 @@ void initSprite(bool change_pic, bool space_tab_pressed) {
     cout << " Index " << pos_current_pic << endl;
     // cout << pic_file_name << endl;
 
-    if(!main_level_pic.loadFromFile(pic_file_name)) {
+    if (!main_level_pic.loadFromFile(pic_file_name)) {
         printLoadingError(pic_file_name);
     } else {
         const sf::Vector2f sizeImg = (sf::Vector2f) main_level_pic.getSize();
@@ -221,7 +250,7 @@ void readPuzzleTab(sf::RenderWindow &window) {
     sf::Text tmp;
     sf::CircleShape circle;
     bool not_hidden_yet = ! mode_hidden || (img_showing_counter < img_showing_duration_hidden);
-    if(show_numbers && not_hidden_yet ) {
+    if (show_numbers && not_hidden_yet ) {
         tmp.setFont(font);
         tmp.setCharacterSize(15);
         tmp.setFillColor(sf::Color::Cyan);
@@ -237,20 +266,21 @@ void readPuzzleTab(sf::RenderWindow &window) {
 		img_showing_counter++;
 	}
 
-    for(int i=0; i < division; i++) {
-        for(int j=0; j < division; j++) {
+    for (int i = 0; i < division; i++) {
+        for (int j = 0; j < division; j++) {
             if ( puzzle[i][j].active ) {
                 int x = puzzle[i][j].x;
                 int y = puzzle[i][j].y;
                 if (mode_hidden == false || img_showing_counter < (division * img_showing_duration_hidden) ) {
                     window.draw(ajustSprite( main_pic, x, y, j, i ));
                 } else {
-					if(! hide_sound_is_played ) {
+					if (! hide_sound_is_played ) {
 						hide_sound->play();	
 						hide_sound_is_played = true;
 					}
-                    if ( isLuckyPiece(y, x) ) {
+                    if ( isLuckyPiece(x, y) ) {
                         window.draw(ajustSprite( main_pic, x, y, j, i ));
+                        window.draw(getBlackSquare(i, j, dim_x, dim_y));
                     } else {
                         window.draw(ajustSprite( hidden_back, x, y, j, i ));
                     }
@@ -275,17 +305,17 @@ void exchangePiece(int x, int y, int x_, int y_) {
 }
 
 void movePiece(int xx, int yy) {
-    if(puzzle[yy][xx].active) {
+    if (puzzle[yy][xx].active) {
         // single cell
-        for(int i = yy - 1; i <= yy + 1; i++) {
-            for(int j = xx - 1; j <= xx + 1; j++) {
+        for (int i = yy - 1; i <= yy + 1; i++) {
+            for (int j = xx - 1; j <= xx + 1; j++) {
                 bool correct_pos = (i >=0 && j >= 0 && i < division && j < division);
                 bool corner =  ((i == yy - 1) && (j == xx - 1))
                             || ((i == yy + 1) && (j == xx + 1))
                             || ((i == yy - 1) && (j == xx + 1))
                             || ((i == yy + 1) && (j == xx - 1));
-                if(correct_pos && ! corner ) {
-                    if(!puzzle[i][j].active) {
+                if (correct_pos && ! corner ) {
+                    if (!puzzle[i][j].active) {
                         exchangePiece(xx, yy, j, i);
                         total_moves++;
                         return;
@@ -294,8 +324,8 @@ void movePiece(int xx, int yy) {
             }
         }
         // multiple cells
-        for(int i = -division; i <= division; i++) {
-            if(yy+i >= 0 && yy+i < division && ! puzzle[yy+i][xx].active) {
+        for (int i = -division; i <= division; i++) {
+            if (yy+i >= 0 && yy+i < division && ! puzzle[yy+i][xx].active) {
                 //1 : down , -1 : up
                 int tmp_y = yy + i, dy = (yy + i < yy) ? 1 : -1;
                 while(tmp_y != yy) {
@@ -305,7 +335,7 @@ void movePiece(int xx, int yy) {
                 total_moves++;
                 break;
             }
-            if(xx+i >= 0 && xx+i < division && ! puzzle[yy][xx+i].active) {
+            if (xx+i >= 0 && xx+i < division && ! puzzle[yy][xx+i].active) {
                 //1 : right , -1 : left
                 int tmp_x = xx + i, dx = (xx + i < xx) ? 1 : -1;
                 while(tmp_x != xx) {
@@ -326,19 +356,19 @@ void drawGrid(sf::RenderWindow &window) {
     r.setOutlineColor(mode_hidden ? sf::Color::White : sf::Color::Black);
     r.setSize(sf::Vector2f(dim_x, dim_y));
 
-    for(int i=0; i < division; i++) {
-        for(int j=0; j < division; j++) {
-                r.setPosition(j * dim_x, i * dim_y);
-                window.draw(r);
+    for (int i = 0; i < division; i++) {
+        for (int j = 0; j < division; j++) {
+            r.setPosition(j * dim_x, i * dim_y);
+            window.draw(r);
         }
     }
 }
 
 bool gameClear() {
-    for(int y=0; y < division; y++) {
-        for(int x=0; x < division; x++) {
+    for (int y=0; y < division; y++) {
+        for (int x=0; x < division; x++) {
             Piece p = puzzle[y][x];
-            if(!(p.x == x && p.y == y)) {
+            if (!(p.x == x && p.y == y)) {
                 return false;
             }
         }
@@ -348,7 +378,7 @@ bool gameClear() {
 
 void initRandomPos() {
     initPiece();
-    for(int i = 0; i < 5000 * division; i++) {
+    for (int i = 0; i < 5000 * division; i++) {
         int xr = randomGeneratorInf(division);
         int yr = randomGeneratorInf(division);
         movePiece(xr, yr);
@@ -373,9 +403,9 @@ void newGame(bool dont_change_pic, bool space_or_tab_pressed) {
 void increaseLevel(bool positive) {
     int inc = positive ? 1 : -1;
     division += inc;
-    if(division < 3) division = 3;
-    if(division > 10) division = 10;
-    if(600 % division == 1) division += 1;
+    if (division < 3) division = 3;
+    if (division > 10) division = 10;
+    if (600 % division == 1) division += 1;
     level_index_number++;
 }
 
@@ -436,7 +466,7 @@ void initAppropriateControlText(sf::Text &control_text) {
     all.append(getAppropriedText("M", "Hide/Show Menu"));
     
     // first call
-    if(modes_used->size() == 0) {
+    if (modes_used->size() == 0) {
         const double mult = getMultiplicator();
 		all.append("\nSCORE x "+doubleToStr( mult ));    
     }
@@ -485,7 +515,7 @@ void drawTextMenu(sf::Sound score_sound, sf::Sprite back_sprite, sf::RenderWindo
     
     // perfs + moves
     string modes_str = getModesUsedText();
-    if(modes_str.compare("") != 0) {
+    if (modes_str.compare("") != 0) {
         string moves = doubleToStr((double) total_moves);
         string perf = doubleToStr((double) floor(perf_animation_count) );
         modes_str = modes_str.compare("\n") == 0 ? "" : modes_str;
@@ -498,7 +528,7 @@ void drawTextMenu(sf::Sound score_sound, sf::Sprite back_sprite, sf::RenderWindo
         perf_text.setOutlineThickness(0.7f);
         perf_text.setPosition(anchor + sf::Vector2f(20, 200));
 
-        if(perf_animation_count <= performance) {
+        if (perf_animation_count <= performance) {
             perf_animation_count += ((double) performance / perf_animation_frames);
             // score_sound.play();
         } else {
@@ -533,14 +563,14 @@ void load_flashlight_shader(sf::RenderStates &states) {
     // note : shaders's order matters
     flashlight_shader_loaded = flashlight_shader.loadFromFile("shaders/flashlight.frag.af", sf::Shader::Fragment);
 
-    if(!flashlight_shader_loaded)
+    if (!flashlight_shader_loaded)
         printLoadingError("FLASHLIGHTS SHADERS");
 
     states.shader = &flashlight_shader;
 }
 
 void refreshFlashLightShader(float x, float y) {
-    if(flashlight_shader_loaded) {
+    if (flashlight_shader_loaded) {
         y = height - y;
         float radius = flashlight_animation_count * (width / flashlight_animation_frames);
         sf::Vector3f vec_color(0, 0, 18);
@@ -555,7 +585,7 @@ void refreshFlashLightShader(float x, float y) {
 }
 
 void refreshPixelateShader(float intensity) {
-    if(pixelate_shader_loaded) {
+    if (pixelate_shader_loaded) {
         intensity = intensity < 0 ? 0 : intensity; 
         pix_shader.setUniform("texture", sf::Shader::CurrentTexture);
         pix_shader.setUniform("pixel_threshold", intensity );
@@ -581,37 +611,37 @@ int main() {
     sf::Texture back_texture, hidden_texture, chrono_texture;
     sf::Sprite back_sprite;
     
-    if(!font.loadFromFile(FONT_FILE)) {
+    if (!font.loadFromFile(FONT_FILE)) {
         printLoadingError(FONT_FILE);
     }
 
-    if(main_icon.loadFromFile(IMG_ICON)) {
+    if (main_icon.loadFromFile(IMG_ICON)) {
         sf::Vector2u icon_dim = main_icon.getSize();
         window.setIcon(icon_dim.x, icon_dim.y, main_icon.getPixelsPtr());
     } else {
         printLoadingError(IMG_ICON);
     }
 
-    if(back_texture.loadFromFile(TEXT_BACK)) {
+    if (back_texture.loadFromFile(TEXT_BACK)) {
         back_texture.setSmooth( true ); 
         back_sprite.setTexture(back_texture);  
     } else {
         printLoadingError(TEXT_BACK);
     }
     
-    if(hidden_texture.loadFromFile(HIDDEN_BACK)) {
+    if (hidden_texture.loadFromFile(HIDDEN_BACK)) {
         hidden_texture.setSmooth( true ); 
         hidden_back.setTexture(hidden_texture);  
     } else {
         printLoadingError(HIDDEN_BACK);
     }
-    if(chrono_texture.loadFromFile(CHRONO_BACK)) {
+    if (chrono_texture.loadFromFile(CHRONO_BACK)) {
         chrono_texture.setSmooth( true ); 
         chrono_back.setTexture(chrono_texture);  
     } else {
         printLoadingError(CHRONO_BACK);
     }
-    if(flashlight_texture.loadFromFile(FLASHLIGHT_BACK)) {
+    if (flashlight_texture.loadFromFile(FLASHLIGHT_BACK)) {
         flashlight_texture.setSmooth( true ); 
         flashlight_back.setTexture(flashlight_texture);  
     } else {
@@ -627,16 +657,16 @@ int main() {
 
     // SOUNDS
     sf::SoundBuffer hit_buff, congrats_buff, next_buff, hide_effect_buff, score_effect_buff;
-    if(!hit_buff.loadFromFile(HIT_SONG)) {
+    if (!hit_buff.loadFromFile(HIT_SONG)) {
        printLoadingError(HIT_SONG);
     }
-    if(!congrats_buff.loadFromFile(CONGRATS_SONG)) {
+    if (!congrats_buff.loadFromFile(CONGRATS_SONG)) {
        printLoadingError(CONGRATS_SONG);
     }
-    if(!next_buff.loadFromFile(NEXT_SONG)) {
+    if (!next_buff.loadFromFile(NEXT_SONG)) {
        printLoadingError(NEXT_SONG);
     }
-    if(!score_effect_buff.loadFromFile(SCORE_EFFECT_SONG)) {
+    if (!score_effect_buff.loadFromFile(SCORE_EFFECT_SONG)) {
        printLoadingError(SCORE_EFFECT_SONG);
     }
     sf::Sound   hit_sound(hit_buff), 
@@ -649,7 +679,7 @@ int main() {
     congrats_sound.setVolume(volume);
     score_sound.setVolume(volume);
 
-	if(!hide_effect_buff.loadFromFile(HIDE_EFFECT_SONG)) {
+	if (!hide_effect_buff.loadFromFile(HIDE_EFFECT_SONG)) {
        printLoadingError(HIDE_EFFECT_SONG);
     } else {
 		hide_sound = new sf::Sound(hide_effect_buff);
@@ -659,7 +689,7 @@ int main() {
 
     // SHADER
     sf::RenderStates pixelate_state;
-    if(! pix_shader.loadFromFile(PIXEL_SHADER, sf::Shader::Fragment) ) {
+    if (! pix_shader.loadFromFile(PIXEL_SHADER, sf::Shader::Fragment) ) {
         printLoadingError(PIXEL_SHADER);
     } else {
         pixelate_state.shader = &pix_shader;
@@ -674,12 +704,12 @@ int main() {
         float x = static_cast<float>(sf::Mouse::getPosition(window).x);
         float y = static_cast<float>(sf::Mouse::getPosition(window).y);
         while(window.pollEvent(e)) {
-            if(e.type == sf::Event::Closed) {
+            if (e.type == sf::Event::Closed) {
                 window.close();
                 return 0;
             }
-            if(e.type == sf::Event::MouseButtonPressed && count_done) {
-                if(first) {
+            if (e.type == sf::Event::MouseButtonPressed && count_done) {
+                if (first) {
                     first = false;
                     newGame(false, true);
                 } else {
@@ -693,77 +723,77 @@ int main() {
                     hit_sound.play();
                 }
             }
-            if(e.type == sf::Event::KeyReleased) {               
+            if (e.type == sf::Event::KeyReleased) {               
                 // modes
-                if(e.key.code == sf::Keyboard::T && first  && count_done) {
+                if (e.key.code == sf::Keyboard::T && first  && count_done) {
                     mode_random_hole = ! mode_random_hole;
                 }
-                if(e.key.code == sf::Keyboard::H && first  && count_done) {
+                if (e.key.code == sf::Keyboard::H && first  && count_done) {
                     mode_hidden = ! mode_hidden;
                 }
-                if(e.key.code == sf::Keyboard::F && first && count_done) {
+                if (e.key.code == sf::Keyboard::F && first && count_done) {
                     mode_flashlight = ! mode_flashlight;
                 }
-                if( e.key.code == sf::Keyboard::N && first && count_done) {
+                if ( e.key.code == sf::Keyboard::N && first && count_done) {
                     show_numbers = ! show_numbers;
                 }
 
                 // navigation
-                if((e.key.code == sf::Keyboard::Tab || e.key.code == sf::Keyboard::Space)  && count_done ) {
+                if ((e.key.code == sf::Keyboard::Tab || e.key.code == sf::Keyboard::Space)  && count_done ) {
                     stopAndInitGame(next_sound, true);
                 }
-                if(e.key.code == sf::Keyboard::Left  && count_done) {
+                if (e.key.code == sf::Keyboard::Left  && count_done) {
                     pos_current_pic--;
                     stopAndInitGame(next_sound, false);
                 }
-                if(e.key.code == sf::Keyboard::Right && count_done) {
+                if (e.key.code == sf::Keyboard::Right && count_done) {
                     pos_current_pic++;
                     stopAndInitGame(next_sound, false);
                 }
 
                 // Level
-                if(e.key.code == sf::Keyboard::Up && first  && count_done) {
+                if (e.key.code == sf::Keyboard::Up && first  && count_done) {
                     increaseLevel(true);
                     newGame(false, true); //false:: on ne change pas l img
                 }
 
-                if(e.key.code == sf::Keyboard::Down && first  && count_done) {
+                if (e.key.code == sf::Keyboard::Down && first  && count_done) {
                     increaseLevel(false);
                     newGame(false, true);//false:: on ne change pas l img
                 }
 
-                if(e.key.code == sf::Keyboard::C) {
+                if (e.key.code == sf::Keyboard::C) {
                     turn_on_chrono = ! turn_on_chrono;
                 }
 
-                if(e.key.code == sf::Keyboard::M) {
+                if (e.key.code == sf::Keyboard::M) {
                     hide_menu = ! hide_menu;
                 }             
-                if(e.key.code == sf::Keyboard::R && first && count_done) {
+                if (e.key.code == sf::Keyboard::R && first && count_done) {
                     pick_next_randomly = ! pick_next_randomly;
                 }
 
-                if(e.key.code == sf::Keyboard::S) {
+                if (e.key.code == sf::Keyboard::S) {
                     take_screenshot = true;
                 }
 
             }
         }
 
-        if(first) {
+        if (first) {
             // first load
             clock.restart();
-            if(pixelate_intensity > 0) {
+            if (pixelate_intensity > 0) {
                 pixelate_intensity -= pixelate_velocity;
             } else {
                 pixelate_intensity = 0;
             }
 
-            if(mode_flashlight && !flashlight_anim_done) {
+            if (mode_flashlight && !flashlight_anim_done) {
                 refreshFlashLightShader(x , y );
                 window.draw(main_pic, flashlight_state);
                 flashlight_animation_count++;
-                if(flashlight_animation_count > flashlight_animation_frames) {
+                if (flashlight_animation_count > flashlight_animation_frames) {
                     flashlight_animation_count = 0;
                     flashlight_anim_done = true;
                 }
@@ -772,7 +802,7 @@ int main() {
                 window.draw(main_pic, pixelate_state);
                 
                 drawGrid(window);
-                if(! hide_menu )
+                if (! hide_menu )
                     drawTextMenu(score_sound, back_sprite, window);
             }
         } else {
@@ -780,13 +810,13 @@ int main() {
             drawGrid(window);
 
             time_elapsed = clock.getElapsedTime().asSeconds();
-
             // for HD mode
-            if ( clock.getElapsedTime().asMilliseconds() % hidden_tick_time == 0 ) {
+            if ( (++hidden_tick_count) % hidden_tick_time == 0) {
                 pickLuckyPiece();
+                hidden_tick_count = 0;
             }
             
-            if(mode_flashlight) {
+            if (mode_flashlight) {
                 x = x < 0 ? 0 : x; x = x > width ? height : x;
                 y = y < 0 ? 0 : y; y = y > height ? height : y;
                 sf::Vector2u size = flashlight_texture.getSize();
@@ -795,8 +825,8 @@ int main() {
                 // window.draw(points, flashlight_state);
             }
 
-            if(gameClear()) {
-                if(mode_flashlight)
+            if (gameClear()) {
+                if (mode_flashlight)
                     flashlight_anim_done = false;
                 count_done = false;
                 first = true;
@@ -806,17 +836,17 @@ int main() {
                 // increaseLevel(true);
                 next_sound.play();
                 // dealing with modes result
-                if(mode_hidden)
+                if (mode_hidden)
                     modes_used->push_back("[HD]");
-                if(mode_flashlight)
+                if (mode_flashlight)
                     modes_used->push_back("[FL]");
-                if(mode_random_hole)
+                if (mode_random_hole)
                     modes_used->push_back("[RL]");
-                if(show_numbers) {
+                if (show_numbers) {
                     modes_used->push_back("[NB]");
                 }
                 
-                if(modes_used->size() == 0) {
+                if (modes_used->size() == 0) {
                     modes_used->push_back("\n"); // a little trick
                 }
             }
