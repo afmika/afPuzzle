@@ -12,7 +12,7 @@ DEST_NAME = puzzle.exe
 
 all: build_classes build_main run
 
-# We define the includes which are not specific to the project to avoid compilation errors
+# We define the includes that are not specific to the project to avoid compilation errors
 # Wall means show warnings
 build_classes:
 	g++ $(SET_RELEASE_VER) $(STD) -Wall -s -I $(SFML_INCLUDES) -c ${CLASSES}/*.h
