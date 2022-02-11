@@ -1,7 +1,5 @@
 # afPuzzle
-![alt text](cover/cover.png)
-
-edPuzzle is a simple puzzle game with 4 modes available.
+afPuzzle is a simple puzzle game with 4 modes available.
 
 1. Download the SFML lib
 2. Edit/Run the make file
@@ -9,3 +7,4 @@ edPuzzle is a simple puzzle game with 4 modes available.
 
 # Download
 [afPuzzle on itch.io] (https://afmika.itch.io/afpuzzle)
+![alt text](cover/cover.png)
