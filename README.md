@@ -6,5 +6,5 @@ afPuzzle is a simple puzzle game with 4 modes available.
 3. `$ make` and you are done!
 
 # Download
-[afPuzzle on itch.io](https://afmika.itch.io/afpuzzle)
+[afPuzzle on itch.io](https://afmika.itch.io/afpuzzle)\
 ![alt text](cover/cover.png)
