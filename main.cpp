@@ -270,16 +270,16 @@ void readPuzzleTab(sf::RenderWindow &window) {
                 if (mode_hidden == false || img_showing_counter < (division * img_showing_duration_hidden) ) {
                     window.draw(ajustSprite( main_pic, x, y, j, i ));
                 } else {
-					if (! hide_sound_is_played ) {
-						hide_sound->play();	
-						hide_sound_is_played = true;
-					}
+                    if (! hide_sound_is_played ) {
+                        hide_sound->play();	
+                        hide_sound_is_played = true;
+                    }
                     if ( isLuckyPiece(x, y) ) {
                         window.draw(ajustSprite( main_pic, x, y, j, i ));
                         window.draw(getBlackSquare(i, j, dim_x, dim_y));
-						continue;
+                        continue;
                     }
-					window.draw(ajustSprite( hidden_back, x, y, j, i ));
+                    window.draw(ajustSprite( hidden_back, x, y, j, i ));
                 }
                 if ( show_numbers ) {
                     tmp.setString(doubleToStr( puzzle[i][j].index_number ));
@@ -433,13 +433,13 @@ void drawChrono(sf::Text &time_text, sf::RenderWindow &window) {
     window.draw(time_text);
 }
 
-string getAppropriedText(string button, bool switch_state, string text) {
+string getAppropriateText(string button, bool switch_state, string text) {
     string tmp("[ "+button+" ] : ");
     tmp.append(text + " ");
     tmp.append(switch_state ? "[ON]\n" : "[OFF]\n");
     return tmp;
 }
-string getAppropriedText(string button, string text) {
+string getAppropriateText(string button, string text) {
     string tmp("[ "+button+" ] : ");
     tmp.append(text + "\n");
     return tmp;
@@ -447,19 +447,19 @@ string getAppropriedText(string button, string text) {
 
 void initAppropriateControlText(sf::Text &control_text) {
     string all;
-    all.append(getAppropriedText("UP / DOWN", "Change level"));
-    all.append(getAppropriedText("Left / Right", "Navigate"));
-    all.append(getAppropriedText("R", pick_next_randomly, "Random picture"));
+    all.append(getAppropriateText("UP / DOWN", "Change level"));
+    all.append(getAppropriateText("Left / Right", "Navigate"));
+    all.append(getAppropriateText("R", pick_next_randomly, "Random picture"));
     all.append("\n");
-    all.append(getAppropriedText("N", show_numbers, "Show numbers"));
-    all.append(getAppropriedText("T", mode_random_hole, "Mode random hole"));
-    all.append(getAppropriedText("H", mode_hidden, "Mode Hidden"));
-    all.append(getAppropriedText("F", mode_flashlight, "Mode FlashLight"));
+    all.append(getAppropriateText("N", show_numbers, "Show numbers"));
+    all.append(getAppropriateText("T", mode_random_hole, "Mode random hole"));
+    all.append(getAppropriateText("H", mode_hidden, "Mode Hidden"));
+    all.append(getAppropriateText("F", mode_flashlight, "Mode FlashLight"));
     all.append("\n");
     string tmp((pick_next_randomly ? " (Random)" : ""));
-    all.append(getAppropriedText("Space / Tab", "Next puzzle" + tmp ));
-    all.append(getAppropriedText("S", "Screenshot"));
-    all.append(getAppropriedText("M", "Hide/Show Menu"));
+    all.append(getAppropriateText("Space / Tab", "Next puzzle" + tmp ));
+    all.append(getAppropriateText("S", "Screenshot"));
+    all.append(getAppropriateText("M", "Hide/Show Menu"));
     
     // first call
     if (modes_used->size() == 0) {
