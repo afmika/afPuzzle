@@ -1,3 +1,8 @@
-include/
-lib/
-bin/
+.vs
+.vscode
+bin
+obj
+*.make
+*.zip
+vendor/sfml
+Makefile
