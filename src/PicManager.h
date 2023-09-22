@@ -6,5 +6,5 @@
 
 #include "Utils.h"
 
-bool isValid(string val);
-vector<string> loadPictures();
+bool isValid(std::string val);
+std::vector<std::string> loadPictures();

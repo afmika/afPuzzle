@@ -94,7 +94,7 @@ std::vector<std::vector<Piece>> puzzle;
 
 int printLoadingError(std::string filename)
 {
-    cout << "Error loading " << filename << endl;
+    std::cout << "Error loading " << filename << '\n';
     return EXIT_FAILURE;
 }
 
@@ -166,7 +166,7 @@ bool isLuckyPiece(int x, int y)
 {
     if (uncoveredPiece != nullptr)
     {
-        for (auto piece : *uncoveredPiece)
+        for (const auto &piece : *uncoveredPiece)
         {
             if (piece.at(0) == x && piece.at(1) == y)
                 return true;
@@ -529,10 +529,8 @@ void initAppropriateControlText(sf::Text &controlText)
 std::string getModesUsedText()
 {
     std::string text = "";
-    for (size_t i = 0; i < modesUsed->size(); i++)
-    {
-        text.append(modesUsed->at(i));
-    }
+    for (const auto &used : *modesUsed)
+        text.append(used);
     return text;
 }
 
@@ -813,7 +811,7 @@ int main()
                     int y = e.mouseButton.y / dimY;
                     movePiece(x, y);
 
-                    cout << totalMoves << endl;
+                    std::cout << totalMoves << '\n';
                     performance = refreshPerformance(totalMoves);
 
                     hitSound.play();

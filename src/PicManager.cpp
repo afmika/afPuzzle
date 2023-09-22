@@ -1,43 +1,38 @@
 #include "PicManager.h"
 
-bool isValid(string val)
+bool isValid(std::string val)
 {
-    vector<string> tmp = doSplit(val, ".");
-    bool invalidSize = tmp.size() < 2;
-
-    if (invalidSize)
+    std::vector<std::string> chunks = doSplit(val, ".");
+    if (chunks.size() < 2)
     {
-        cout << " INVALID FILE TYPE ! " << val << endl;
+        std::cout << " INVALID FILE TYPE ! " << val << '\n';
         return false;
     }
 
-    string format(tmp[tmp.size() - 1]);
-    bool invalidFormat = format.compare("af") != 0 && format.compare("AF") != 0;
-    if (invalidFormat)
+    std::string format(chunks[chunks.size() - 1]);
+    if (format.compare("af") != 0 && format.compare("AF") != 0)
     {
-        cout << " ERROR. FILE EXTENSION \"" << format << "\" NOT RECOGNIZED " << val << endl;
+        std::cout << " ERROR. FILE EXTENSION \"" << format << "\" NOT RECOGNIZED " << val << '\n';
         return false;
     }
 
     return true;
 }
 
-vector<string> loadPictures()
+std::vector<std::string> loadPictures()
 {
     std::string path = "./ressources/art";
-    vector<string> tmp = readDirectoryContent(path);
-    vector<string> valid;
+    std::vector<std::string> content = readDirectoryContent(path);
+    std::vector<std::string> valid;
 
-    for (int i = 0; i < tmp.size(); i++)
+    for (const auto &value : content)
     {
-        string value(tmp[i]);
-        // cout << "File at index " << i << " : "<< tmp[i] << endl;
         if (isValid(value))
         {
-            tmp[i] = path;
-            tmp[i].append("/");
-            tmp[i].append(value);
-            valid.push_back(tmp[i]);
+            std::string tmp = path;
+            tmp.append("/");
+            tmp.append(value);
+            valid.push_back(tmp);
         }
     }
     return valid;
