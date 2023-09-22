@@ -1,14 +1,13 @@
 # afPuzzle
-afPuzzle is a simple sliding puzzle game, it comes with a few interactive modes.
+afPuzzle is a simple sliding puzzle game, it has a few interactive modes.
 * Normal Mode
 * Flashlight Mode
 * Hidden Mode
 * Random Hole
-* A mix of the above
+* Combination of the above
 
 ## Download
 [afPuzzle on itch.io](https://afmika.itch.io/afpuzzle)\
-![alt text](cover/cover.png)
 
 ## Windows (g++)
 1. Download SFML and extract it to `vendor/sfml`
@@ -17,3 +16,5 @@ afPuzzle is a simple sliding puzzle game, it comes with a few interactive modes.
 
 ## Linux
 TODO
+
+![alt text](cover/cover.png)
