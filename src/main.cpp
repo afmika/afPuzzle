@@ -735,21 +735,21 @@ int main()
 
     // SOUNDS
     sf::SoundBuffer hitBuff, congratsBuff, nextBuff, hideEffectBuff, scoreEffectBuff;
-    if (!hitBuff.loadFromFile(HIT_SONG))
+    if (!hitBuff.loadFromFile(HIT_SOUND))
     {
-        printLoadingError(HIT_SONG);
+        printLoadingError(HIT_SOUND);
     }
-    if (!congratsBuff.loadFromFile(CONGRATS_SONG))
+    if (!congratsBuff.loadFromFile(CONGRATS_SOUND))
     {
-        printLoadingError(CONGRATS_SONG);
+        printLoadingError(CONGRATS_SOUND);
     }
-    if (!nextBuff.loadFromFile(NEXT_SONG))
+    if (!nextBuff.loadFromFile(NEXT_SOUND))
     {
-        printLoadingError(NEXT_SONG);
+        printLoadingError(NEXT_SOUND);
     }
-    if (!scoreEffectBuff.loadFromFile(SCORE_EFFECT_SONG))
+    if (!scoreEffectBuff.loadFromFile(SCORE_EFFECT_SOUND))
     {
-        printLoadingError(SCORE_EFFECT_SONG);
+        printLoadingError(SCORE_EFFECT_SOUND);
     }
     sf::Sound hitSound(hitBuff),
         congratsSound(congratsBuff),
@@ -761,9 +761,9 @@ int main()
     congratsSound.setVolume(volume);
     scoreSound.setVolume(volume);
 
-    if (!hideEffectBuff.loadFromFile(HIDE_EFFECT_SONG))
+    if (!hideEffectBuff.loadFromFile(HIDE_EFFECT_SOUND))
     {
-        printLoadingError(HIDE_EFFECT_SONG);
+        printLoadingError(HIDE_EFFECT_SOUND);
     }
     else
     {
