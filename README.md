@@ -7,12 +7,12 @@ afPuzzle is a simple sliding puzzle game, it has a few interactive modes.
 * Combination of the above
 
 ## Download
-[afPuzzle on itch.io](https://afmika.itch.io/afpuzzle)\
+[afPuzzle on itch.io](https://afmika.itch.io/afpuzzle)
 
 ## Windows (g++)
 1. Download SFML and extract it to `vendor/sfml`
 2. Download premake5 and generate the Makefile with `premake5 gmake`
-3. Run *build-win.bat*
+3. Run `build-win-release.bat`
 
 ## Linux
 TODO
