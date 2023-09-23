@@ -17,4 +17,5 @@
 #define FLASHLIGHT_BACK "ressources/flashlight-back.af"
 
 // shaders
-#define PIXEL_SHADER "shaders/pixelate.frag.af"
+#define PIXEL_SHADER "shaders/pixelate.frag"
+#define FLASHLIGHT_SHADER "shaders/flashlight.frag"

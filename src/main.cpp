@@ -606,7 +606,7 @@ void drawTextMenu(sf::Sound scoreSound, sf::Sprite backSprite, sf::RenderWindow 
 void load_flashlight_shader(sf::RenderStates &states)
 {
     // note : shaders's order matters
-    flashlightShaderLoaded = flashlightShader.loadFromFile("shaders/flashlight.frag.af", sf::Shader::Fragment);
+    flashlightShaderLoaded = flashlightShader.loadFromFile(FLASHLIGHT_SHADER, sf::Shader::Fragment);
 
     if (!flashlightShaderLoaded)
         printLoadingError("FLASHLIGHTS SHADERS");
