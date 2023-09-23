@@ -55,40 +55,35 @@ const float pixelateVelocity = pixelateIntensityInit / 5.0f; // back to normal a
 // performance animation frame count
 const int perfAnimationFrames = 30;
 int perfAnimationCount = 0;
-bool countCone = true;
+bool countDone = true;
 
-// flashlight animatopm frame count
+// flashlight animation frame count
 const int flashlightAnimationFrames = 30;
 int flashlightAnimationCount = 0;
 bool flashlightAnimDone = true;
 
 sf::Sound *hideSound = NULL;
-
 sf::Texture mainLevelPic;
 sf::Texture flashlightTexture;
 sf::Sprite mainPic;
 sf::Sprite hiddenBack;
 sf::Sprite chronoBack;
 sf::Sprite flashlightBack;
-
 sf::Image mainIcon;
 sf::Shader pixShader;
 sf::Shader flashlightShader;
-
 sf::Font font;
 
 std::vector<std::string> files;
 std::vector<std::string> *modesUsed = new std::vector<std::string>();
 
-sf::VertexArray points;
-
-typedef struct piece
+struct Piece
 {
     int x;
     int y;
     int index_number;
     bool active;
-} Piece;
+};
 
 std::vector<std::vector<Piece>> puzzle;
 
@@ -112,7 +107,7 @@ void initTable()
 double getMultiplicator()
 {
     double multPerf = 1;
-    multPerf -= showNumbers ? 0.6 : 0;     // minus
+    multPerf -= showNumbers ? 0.6 : 0;     // penalty
     multPerf += modeHidden ? 0.3 : 0;      // bonus
     multPerf += modeFlashlight ? 0.2 : 0;  // bonus
     multPerf += modeRandomHole ? 0.05 : 0; // bonus
@@ -129,6 +124,7 @@ int refreshPerformance(int moves)
     double perf = k * 5000;
     perf *= multPerf;
     perf += 1000 * (division / timeElapsed);
+
     return (int)perf;
 }
 
@@ -407,9 +403,7 @@ bool gameClear()
         {
             Piece p = puzzle[y][x];
             if (!(p.x == x && p.y == y))
-            {
                 return false;
-            }
         }
     }
     return true;
@@ -583,14 +577,9 @@ void drawTextMenu(sf::Sound scoreSound, sf::Sprite backSprite, sf::RenderWindow 
         perfText.setPosition(anchor + sf::Vector2f(20, 200));
 
         if (perfAnimationCount <= performance)
-        {
             perfAnimationCount += ((double)performance / perfAnimationFrames);
-            // scoreSound.play();
-        }
         else
-        {
-            countCone = true;
-        }
+            countDone = true;
 
         window.draw(perfText);
     }
@@ -669,7 +658,7 @@ int main()
     files = loadPictures();
     sf::Clock clock; // timer
 
-    sf::RenderWindow window(sf::VideoMode(width, height), "afPuzzle 3 :: afmika", sf::Style::Titlebar | sf::Style::Close);
+    sf::RenderWindow window(sf::VideoMode(width, height), "afPuzzle 3.1 :: afmika", sf::Style::Titlebar | sf::Style::Close);
     sf::Texture backTexture, hiddenTexture, chronoTexture;
     sf::Sprite backSprite;
 
@@ -798,7 +787,8 @@ int main()
                 window.close();
                 return 0;
             }
-            if (e.type == sf::Event::MouseButtonPressed && countCone)
+            // mouse events
+            if (e.type == sf::Event::MouseButtonPressed && countDone)
             {
                 if (first)
                 {
@@ -810,80 +800,82 @@ int main()
                     int x = e.mouseButton.x / dimX;
                     int y = e.mouseButton.y / dimY;
                     movePiece(x, y);
-
                     std::cout << totalMoves << '\n';
                     performance = refreshPerformance(totalMoves);
-
                     hitSound.play();
                 }
             }
-            if (e.type == sf::Event::KeyReleased)
+            // key events
+            if (e.type != sf::Event::KeyReleased)
+                continue;
+            if (first)
             {
-                // modes
-                if (e.key.code == sf::Keyboard::T && first && countCone)
+                switch (e.key.code)
                 {
+                    // modes
+                case sf::Keyboard::T:
                     modeRandomHole = !modeRandomHole;
-                }
-                if (e.key.code == sf::Keyboard::H && first && countCone)
-                {
+                    break;
+                case sf::Keyboard::H:
                     modeHidden = !modeHidden;
-                }
-                if (e.key.code == sf::Keyboard::F && first && countCone)
-                {
+                    break;
+                case sf::Keyboard::F:
                     modeFlashlight = !modeFlashlight;
-                }
-                if (e.key.code == sf::Keyboard::N && first && countCone)
-                {
+                    break;
+                case sf::Keyboard::N:
                     showNumbers = !showNumbers;
+                    break;
+                    // level
+                case sf::Keyboard::Up:
+                    increaseLevel(true);
+                    newGame(false, true);
+                    break;
+                case sf::Keyboard::Down:
+                    increaseLevel(false);
+                    newGame(false, true);
+                    break;
+                default:
+                    break;
                 }
+            }
 
-                // navigation
-                if ((e.key.code == sf::Keyboard::Tab || e.key.code == sf::Keyboard::Space) && countCone)
+            // navigation
+            if (countDone)
+            {
+                if (e.key.code == sf::Keyboard::Tab || e.key.code == sf::Keyboard::Space)
                 {
                     stopAndInitGame(nextSound, true);
                 }
-                if (e.key.code == sf::Keyboard::Left && countCone)
+                else if (e.key.code == sf::Keyboard::Left)
                 {
                     posCurrentPic--;
                     stopAndInitGame(nextSound, false);
                 }
-                if (e.key.code == sf::Keyboard::Right && countCone)
+                else if (e.key.code == sf::Keyboard::Right)
                 {
                     posCurrentPic++;
                     stopAndInitGame(nextSound, false);
                 }
+            }
 
-                // Level
-                if (e.key.code == sf::Keyboard::Up && first && countCone)
-                {
-                    increaseLevel(true);
-                    newGame(false, true); // false:: on ne change pas l img
-                }
-
-                if (e.key.code == sf::Keyboard::Down && first && countCone)
-                {
-                    increaseLevel(false);
-                    newGame(false, true); // false:: on ne change pas l img
-                }
-
-                if (e.key.code == sf::Keyboard::C)
-                {
-                    turnOnChrono = !turnOnChrono;
-                }
-
-                if (e.key.code == sf::Keyboard::M)
-                {
-                    hideMenu = !hideMenu;
-                }
-                if (e.key.code == sf::Keyboard::R && first && countCone)
-                {
+            // UI elements
+            switch (e.key.code)
+            {
+            case sf::Keyboard::C:
+                turnOnChrono = !turnOnChrono;
+                break;
+            case sf::Keyboard::M:
+                hideMenu = !hideMenu;
+                break;
+            case sf::Keyboard::R:
+                if (first && countDone)
                     pickNextRandomly = !pickNextRandomly;
-                }
-
-                if (e.key.code == sf::Keyboard::S)
-                {
-                    takeScreenshot = true;
-                }
+                break;
+            case sf::Keyboard::S:
+                takeScreenshot = true;
+                break;
+            default:
+                break;
             }
         }
 
@@ -950,7 +942,7 @@ int main()
             {
                 if (modeFlashlight)
                     flashlightAnimDone = false;
-                countCone = false;
+                countDone = false;
                 first = true;
                 // pixelateIntensity = pixelateIntensityInit;
                 congratsSound.play();
@@ -965,14 +957,9 @@ int main()
                 if (modeRandomHole)
                     modesUsed->push_back("[RL]");
                 if (showNumbers)
-                {
                     modesUsed->push_back("[NB]");
-                }
-
                 if (modesUsed->size() == 0)
-                {
                     modesUsed->push_back("\n"); // a little trick
-                }
             }
         }
 

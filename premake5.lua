@@ -5,7 +5,7 @@ workspace "afPuzzle"
 project "afPuzzle"
     kind "WindowedApp"
     language "C++"
-    cppdialect "C++14"
+    cppdialect "C++17"
 
     targetdir "%{wks.location}/bin/%{cfg.buildcfg}/%{prj.name}"
     objdir "%{wks.location}/obj/%{cfg.buildcfg}/%{prj.name}"

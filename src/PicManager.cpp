@@ -35,5 +35,7 @@ std::vector<std::string> loadPictures()
             valid.push_back(tmp);
         }
     }
+
+    std::sort(valid.begin(), valid.end());
     return valid;
 }
